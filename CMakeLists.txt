@@ -13,7 +13,11 @@ endif()
 list(APPEND CMAKE_MODULE_PATH
     "${CMAKE_SOURCE_DIR}/cmake/")
 
+if(ENABLE_STD_TEMP_HEAP)
+set(CMAKE_CXX_STANDARD 17)
+else()
 set(CMAKE_CXX_STANDARD 11)
+endif()
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 # for /MT on MSVC
@@ -56,6 +60,9 @@ else()
     set(INCLUDE_NATIVE_COMPONENTS ON)
 endif()
 
+set(ENABLE_STD_TEMP_HEAP
+                      OFF CACHE BOOL
+                      "Use C++17 monotonic buffer instead of mimalloc")
 set(ENABLE_GUI        ON CACHE BOOL
     "Whether the graphical interface is enabled")
 set(USE_QT_GUI        OFF CACHE BOOL
@@ -242,6 +249,7 @@ if(ENABLE_GUI OR ENABLE_CLI)
     add_subdirectory(extlib/libdxfrw)
 endif()
 
+if(NOT ENABLE_STD_TEMP_HEAP)
 message(STATUS "Using in-tree mimalloc")
 set(MI_OVERRIDE OFF CACHE BOOL "")
 set(MI_BUILD_SHARED OFF CACHE BOOL "")
@@ -261,6 +269,7 @@ if(EMSCRIPTEN)
 endif()
 add_subdirectory(extlib/mimalloc EXCLUDE_FROM_ALL)
 set(MIMALLOC_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/extlib/mimalloc/include)
+endif()
 
 if(NOT FORCE_VENDORED_Eigen3)
     find_package(Eigen3 CONFIG)
@@ -467,6 +476,10 @@ if(WIN32)
         -D_UNICODE
         -DNOMINMAX
         -D_USE_MATH_DEFINES)
+endif()
+
+if(ENABLE_STD_TEMP_HEAP)
+    add_definitions(-DENABLE_STD_TEMP_HEAP)
 endif()
 
 if(MSVC)
